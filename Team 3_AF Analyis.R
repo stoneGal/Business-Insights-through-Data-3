@@ -71,4 +71,7 @@ print (airfrancedf$Branded)
 View(airfrancedf[airfrancedf$Branded == 1, c("Keyword Group", "Branded")])
 View(airfrancedf[airfrancedf$Branded == 0, c("Keyword Group", "Branded")])
 
-
+#Changing Match Type to factor
+table(airfrancedf$`Match Type`)
+airfrancedf$Match_factor <- factor(airfrancedf$`Match Type`, 
+                                        levels = c("Broad", "Exact", "Standard", "Advanced", "N/A"))
