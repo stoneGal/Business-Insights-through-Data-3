@@ -19,9 +19,9 @@
 library(readxl)
 
 air_france_df <- read_excel(
-  "Air France Case Spreadsheet Supplement.xls",
+  "Business-Insights-through-Data-3/Air France Case Spreadsheet Supplement.xls", 
   sheet = "DoubleClick"
-  ) #closing read_excel function
+) #closing read_excel function
 
 #Optional: view the imported dataset
 View(air_france_df)
@@ -41,7 +41,12 @@ names(air_france_df)
 air_france_df$NET_Amount <- air_france_df$Amount - air_france_df$`Total Cost`
 
 #Creating an NET_ROA vector (net return generated for every $1 spent)
-air_france_df$NET_ROA <- air_france_df$NET_Amount / air_france_df$`Total Cost`
+#If Total Cost is 0, NET_ROA is set to NA to avoid Inf values from division by zero.
+air_france_df$NET_ROA <- ifelse(
+  air_france_df$`Total Cost` > 0,
+  air_france_df$NET_Amount / air_france_df$`Total Cost`,
+  NA
+) #Closing the ifelse statement for NET_ROA
 
 ###################################################
 ### #3 - Create binary success variables
@@ -51,9 +56,10 @@ air_france_df$NET_ROA <- air_france_df$NET_Amount / air_france_df$`Total Cost`
 ##ROA success: 1 if NET_ROA is at least 4, otherwise 0
 #This means the ad generated at least $4 in net return per $1 spent.
 
-air_france_df$NET_ROA_binary <- ifelse(air_france_df$NET_ROA >= 4,
-                                       1, 
-                                       0
+air_france_df$NET_ROA_binary <- ifelse(
+                                !is.na(air_france_df$NET_ROA) & air_france_df$NET_ROA >= 4,
+                                1,
+                                0
 ) #Closing ifelse statement for NET_ROA_binary
 
 ###Applying business logic to CPC
@@ -170,3 +176,170 @@ air_france_df$Match_Category <- factor(air_france_df$Match_Category,
 
 #Check final match classification
 table(air_france_df$Match_Category, useNA = "ifany")
+
+###################################################
+### #6 - Descriptive Analysis
+###################################################
+
+###This section summarizes campaign performance by key business categories:
+## 1. Publisher / search engine
+## 2. Branded vs. unbranded keywords
+## 3. Match category
+## 4. Optimal vs non-optimal ads
+
+###################################################
+### #6.1 - Performance by publisher
+###################################################
+
+publisher_summary <- aggregate(
+  cbind(
+    NET_Amount, 
+    NET_ROA, 
+    `Avg. Cost per Click`,
+    `Engine Click Thru %`,
+    `Trans. Conv. %`,
+    Amount,
+    `Total Cost`,
+    `Total Volume of Bookings`
+) ~ `Publisher Name`,
+  data = air_france_df,
+FUN = function(x) mean(x, na.rm = TRUE)
+) #Closing aggregate function for publisher_summary
+
+#Rename columns for readability
+colnames(publisher_summary) <- c(
+  "Publisher_Name",
+  "Avg_NET_Amount",
+  "Avg_NET_ROA",
+  "Avg_CPC",
+  "Avg_CTR",
+  "Avg_Conversion_Rate",
+  "Avg_Revenue",
+  "Avg_Total_Cost",
+  "Avg_Bookings"
+) #Closing colnames function for publisher_summary
+
+#Sort publishers by highest average NET_ROA
+publisher_summary <- publisher_summary[order(-publisher_summary$Avg_NET_ROA), ]
+
+#View publisher_summary to see which search engine / publisher gives Air France the strongest return
+print(publisher_summary) 
+
+###################################################
+### #6.2 - Performance by branded vs. unbranded keywords
+###################################################
+
+branded_summary <- aggregate(
+  cbind(
+    NET_Amount,
+    NET_ROA,
+    `Avg. Cost per Click`,
+    `Engine Click Thru %`,
+    `Trans. Conv. %`,
+    Amount,
+    `Total Cost`,
+    `Total Volume of Bookings`
+  ) ~ Branded,
+  data = air_france_df,
+  FUN = function(x) mean(x, na.rm = TRUE)
+) #Closing aggregate function for branded_summary
+
+#Rename columns for readability
+colnames(branded_summary) <- c(
+  "Branded",
+  "Avg_NET_Amount",
+  "Avg_NET_ROA",
+  "Avg_CPC",
+  "Avg_CTR",
+  "Avg_Conversion_Rate",
+  "Avg_Revenue",
+  "Avg_Total_Cost",
+  "Avg_Bookings"
+)
+#Create a readable keyword type label for the branded summary table
+branded_summary$Keyword_Type <- ifelse(
+  branded_summary$Branded == 1, 
+  "Branded",
+  "Unbranded"
+) #Closing ifelse statement for keyword_type from branded_summary
+
+#View branded_summary to see which branded keywords are more efficient than unbranded keywords
+names(branded_summary)
+print(branded_summary)
+
+###################################################
+### #6.3 - Performance by match category
+###################################################
+
+match_summary <- aggregate(
+  cbind(
+    NET_Amount,
+    NET_ROA,
+    `Avg. Cost per Click`,
+    `Engine Click Thru %`,
+    `Trans. Conv. %`,
+    Amount,
+    `Total Cost`,
+    `Total Volume of Bookings`
+  ) ~ Match_Category,
+  data = air_france_df,
+  FUN = function(x) mean(x, na.rm= TRUE)
+) #Closing aggregate function for match_summary
+
+#Rename columns for readability
+colnames(match_summary) <- c(
+  "Match_Category",
+  "Avg_NET_Amount",
+  "Avg_NET_ROA",
+  "Avg_CPC",
+  "Avg_CTR",
+  "Avg_Conversion_Rate",
+  "Avg_Revenue",
+  "Avg_Total_Cost",
+  "Avg_Bookings"
+) #Closing colnames function for match_summary
+
+#View match_summary to compare focused keywords vs broad/standard keywords
+print(match_summary)
+
+###################################################
+### #6.4 - Performance by optimal vs non-optimal ads
+###################################################
+
+optimal_summary <- aggregate(
+  cbind(
+    NET_Amount,
+    NET_ROA,
+    `Avg. Cost per Click`,
+    `Engine Click Thru %`,
+    `Trans. Conv. %`,
+    Amount,
+    `Total Cost`,
+    `Total Volume of Bookings`
+  ) ~ Optimal_binary,
+  data = air_france_df,
+  FUN = function(x) mean(x, na.rm = TRUE)
+) #Closing aggregate function for optimal_summary
+
+#Rename columns for readability
+colnames(optimal_summary) <-c(
+  "Optimal_binary",
+  "Avg_NET_Amount",
+  "Avg_NET_ROA",
+  "Avg_CPC",
+  "Avg_CTR",
+  "Avg_Conversion Rate",
+  "Avg_Revenue",
+  "Avg_Total_Cost",
+  "Avg_Bookings"
+) #Closing colnames function for optimal_summary
+
+#Create readable labels for optimal vs non-optimal ads
+optimal_summary$ad_Status <- ifelse(
+  optimal_summary$Optimal_binary == 1,
+  "Optimal",
+  "Not_Optimal"
+) #Closing ifelse statement for Ad_Status from optimal_summary
+
+#View optimal_summary to compare successful vs unsuccessful ads
+print(optimal_summary)
