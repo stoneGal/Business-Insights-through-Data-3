@@ -874,3 +874,19 @@ ggsave(
   height = 5
 ) #Closing ggsave function
 
+#Save Gini decision tree plot as PNG for presentation use
+png(
+  filename = "outputs/gini_decision_tree_optimal_ads.png",
+  width = 1200,
+  height = 800
+)
+
+rpart.plot(
+  optimal_tree,
+  type = 2,
+  extra = 104,
+  fallen.leaves = TRUE,
+  main = "Gini Decision Tree for Optimal Ads"
+)
+
+dev.off()
