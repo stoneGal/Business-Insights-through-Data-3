@@ -617,12 +617,10 @@ tree_df <- air_france_df[
     "Optimal_factor",
     "Branded",
     "Match_Category",
-    "Bid_Strategy_factor",
     "Avg. Cost per Click",
     "Engine Click Thru %",
-    "Trans. Conv. %",
-    "Publisher Name"
-    )
+     "Publisher Name"
+  )
 ] #Closing tree_df subset
 
 ##Check the target variable distribution.
@@ -633,7 +631,7 @@ table(tree_df$Optimal_factor)
 #The dependent variable is Optimal_factor.
 #The independent variables are branded status, match type, bid strategy, CPC, CTR, conversion rate, and publisher.
 optimal_tree <- rpart(
-  Optimal_factor ~ Branded + Match_Category + Bid_Strategy_factor +
+  Optimal_factor ~ Branded + Match_Category +
     `Avg. Cost per Click` + `Engine Click Thru %` + `Publisher Name`,
   data = tree_df,
   method = "class",
@@ -654,7 +652,7 @@ optimal_tree$variable.importance
 
 ##Plot the decision tree 
 #This visual can be used in Predictive Analysis section of the presentation.
-png("decision_tree.png", width = 1600, height = 1400, res = 150)# Creating a png with adjusted dimensions
+png("decision_tree.png", width = 1700, height = 1400, res = 150)# Creating a png with adjusted dimensions
 par(mar = c(0.5, 0.5, 1, 0.5))  # Adjust margins if needed
 rpart.plot(
   optimal_tree,
@@ -665,7 +663,7 @@ rpart.plot(
   cex = 0.6, #Controls the font size. 
   space = 2 #Adds vertical space between the nodes. 
 ) #Closing the rpart.plot function
-dev.off()# CLosing the .png function. 
+dev.off()# CLosing the .png function.
 
 ###################################################
 ### 15 - Decision tree model evaluation using caret
@@ -725,19 +723,12 @@ tree_df_clean$`Engine Click Thru %`[is.na(tree_df_clean$`Engine Click Thru %`)] 
   na.rm = TRUE
 ) #Closing median function
 
-tree_df_clean$`Trans. Conv. %`[is.na(tree_df_clean$`Trans. Conv. %`)] <- median(
-  tree_df_clean$`Trans. Conv. %`,
-  na.rm = TRUE
-) #Closing median function
 
 #Replace missing categorical values with "Unknown"
 tree_df_clean$Match_Category <- as.character(tree_df_clean$Match_Category)
 tree_df_clean$Match_Category[is.na(tree_df_clean$Match_Category)] <- "Unknown"
 tree_df_clean$Match_Category <- factor(tree_df_clean$Match_Category)
 
-tree_df_clean$Bid_Strategy_factor <- as.character(tree_df_clean$Bid_Strategy_factor)
-tree_df_clean$Bid_Strategy_factor[is.na(tree_df_clean$Bid_Strategy_factor)] <- "Unknown"
-tree_df_clean$Bid_Strategy_factor <- factor(tree_df_clean$Bid_Strategy_factor)
 
 tree_df_clean$`Publisher Name` <- as.character(tree_df_clean$`Publisher Name`)
 tree_df_clean$`Publisher Name`[is.na(tree_df_clean$`Publisher Name`)] <- "Unknown"
@@ -763,8 +754,7 @@ test_tree_df <- tree_df_clean[-train_index, ]
 
 #Build the Gini decision tree on the training data only.
 optimal_tree_train <- rpart(
-  Optimal_factor ~ Branded + Match_Category + Bid_Strategy_factor +
-    `Avg. Cost per Click` + `Engine Click Thru %` + `Trans. Conv. %` + `Publisher Name`,
+  Optimal_factor ~ Branded + Match_Category + `Avg. Cost per Click` + `Engine Click Thru %` + `Publisher Name`,
   data = train_tree_df,
   method = "class",
   parms = list(split = "gini"),
