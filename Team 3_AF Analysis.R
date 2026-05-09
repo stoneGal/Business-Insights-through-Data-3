@@ -282,6 +282,30 @@ tapply(air_france_df$Optimal_binary,
        
        mean, na.rm = TRUE) 
 
+#Is there a relation between Branded and higher Transaction %
+head(air_france_df$`Trans. Conv. %`)
+#Looking at Tran. Con. % there is a 900 value, which makes no sense and is certainly an error. 
+#Changing it to 90.
+library(tidyverse)
+air_france_df <- air_france_df %>%
+  mutate(`Trans. Conv. %` = if_else(`Trans. Conv. %` == 900, 90, `Trans. Conv. %`))
+#checking if it worked
+air_france_df %>% 
+  summarise(max_conv = max(`Trans. Conv. %`, na.rm = TRUE))
+
+#Building a linear regression model
+branded_lm_model <- lm(`Trans. Conv. %` ~ Branded, data = air_france_df)
+summary(branded_lm_model)
+
+#P value shows some significance but R squared sucks, so we can ignore this model.
+###########
+#Is there a relation between Branded and higher Click Thru %
+#Building a linear regression model
+brandedclickthru_lm_model <- lm(`Engine Click Thru %` ~ Branded, data = air_france_df)
+summary(brandedclickthru_lm_model)
+
+#P is much stronger here but R squared is still too low, ignore this model also.
+
 ###################################################
 ### 8 - Engine-specific analysis 
 ################################################### 
