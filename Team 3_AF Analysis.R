@@ -634,7 +634,7 @@ table(tree_df$Optimal_factor)
 #The independent variables are branded status, match type, bid strategy, CPC, CTR, conversion rate, and publisher.
 optimal_tree <- rpart(
   Optimal_factor ~ Branded + Match_Category + Bid_Strategy_factor +
-    `Avg. Cost per Click` + `Engine Click Thru %` + `Trans. Conv. %` + `Publisher Name`,
+    `Avg. Cost per Click` + `Engine Click Thru %` + `Publisher Name`,
   data = tree_df,
   method = "class",
   parms = list(split = "gini"),
@@ -654,13 +654,18 @@ optimal_tree$variable.importance
 
 ##Plot the decision tree 
 #This visual can be used in Predictive Analysis section of the presentation.
+png("decision_tree.png", width = 1600, height = 1400, res = 150)# Creating a png with adjusted dimensions
+par(mar = c(0.5, 0.5, 1, 0.5))  # Adjust margins if needed
 rpart.plot(
   optimal_tree,
   type = 2,
   extra = 104,
   fallen.leaves = TRUE,
-  main = "Gini Decision Tree for Optimal Ads"
+  main = "Gini Decision Tree for Optimal Ads",
+  cex = 0.6, #Controls the font size. 
+  space = 2 #Adds vertical space between the nodes. 
 ) #Closing the rpart.plot function
+dev.off()# CLosing the .png function. 
 
 ###################################################
 ### 15 - Decision tree model evaluation using caret
